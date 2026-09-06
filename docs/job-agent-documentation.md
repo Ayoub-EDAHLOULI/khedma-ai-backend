@@ -268,3 +268,19 @@ Since this isn't a hosted product, "shipping" it means publishing a repo people 
 - **Mobile app** (your stretch goal): just another client hitting the same FastAPI backend — each person still runs their _own_ backend instance (self-hosted, e.g. on their own VPS or even a Raspberry Pi / home server), the mobile app just points at their own instance's URL. No shared backend across users.
 
 This keeps the "for anyone" goal alive — anyone _can_ run it — without you becoming the single operator holding everyone's scraped LinkedIn data on a server with your name on it.
+
+---
+
+## 13. Future UI layer: filter chips (not built yet — planned)
+
+The primary and only search interface is the conversational input box (section 5) — a person can type a bare keyword or a full Darija/French/Arabic/English sentence and it goes through the same `language.py` → `matching.py` pipeline either way. There is no separate "input-field search."
+
+Later, once the core pipeline is solid, add **quick filter chips/dropdowns** as a secondary UI layer for people who prefer clicking over typing:
+
+- **Scope** (Local/International) → `Job.scope`
+- **Remote only** → `Job.is_remote`
+- **Country** → `Job.country` (International mode only)
+- **Seniority** (junior/mid/senior) → not yet a schema field; requires an ingestion-time enrichment step (regex or LLM tag on the description), same pattern as the `is_remote`/`visa_sponsorship` enrichment in section 6
+- **Source** (optional) → `Job.source`
+
+A chip never becomes a second search path — clicking one just pre-fills/overrides a field in the same structured query object `language.py` produces (`role_keywords`, `location_scope`, `remote_only`, `seniority`), which then hits `matching.py` exactly as a typed sentence would. This requires no new backend logic beyond the seniority enrichment step — it's a frontend-only addition when you get to it.
