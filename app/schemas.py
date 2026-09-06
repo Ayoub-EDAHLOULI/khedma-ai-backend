@@ -39,7 +39,7 @@ class JobOut(BaseModel):
 class SearchRequest(BaseModel):
     message: str
     profile_id: UUID
-    scope: Literal["local", "international"] = "local"
+    scope: Optional[Literal["local", "international"]] = None
 
 
 class SearchResultItem(BaseModel):
