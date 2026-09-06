@@ -5,14 +5,16 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Job
+from app.response import ApiResponse
 from app.schemas import JobOut
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-@router.get("/{job_id}", response_model=JobOut)
+@router.get("/{job_id}", response_model=ApiResponse[JobOut])
 def get_job(job_id: UUID, db: Session = Depends(get_db)):
     job = db.get(Job, job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    return job
+
+    return ApiResponse.ok(JobOut.model_validate(job), "Job retrieved")
