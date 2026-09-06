@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-import httpx
+import requests
 
 from app.config import settings
 from app.services.sources.base import JobSource, NormalizedJob
@@ -25,10 +25,11 @@ class JSearchSource(JobSource):
             "x-rapidapi-key": settings.jsearch_rapidapi_key,
         }
 
-        with httpx.Client(timeout=20.0, headers=headers) as client:
+        with requests.Session() as client:
+            client.headers.update(headers)
             for query in QUERIES:
                 params = {"query": query, "num_pages": "1", "date_posted": "all"}
-                response = client.get(API_URL, params=params)
+                response = client.get(API_URL, params=params, timeout=20.0)
                 response.raise_for_status()
                 payload = response.json()
 

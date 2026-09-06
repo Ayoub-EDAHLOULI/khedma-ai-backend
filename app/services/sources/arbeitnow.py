@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timezone
 
-import httpx
+import requests
 
 from app.services.sources.base import JobSource, NormalizedJob
 
@@ -17,7 +17,7 @@ class ArbeitnowSource(JobSource):
         jobs: list[NormalizedJob] = []
         url = API_URL
 
-        with httpx.Client(timeout=10.0) as client:
+        with requests.Session() as client:
             while url:
                 payload = self._get_with_retry(client, url)
 
@@ -30,9 +30,9 @@ class ArbeitnowSource(JobSource):
 
         return jobs
 
-    def _get_with_retry(self, client: httpx.Client, url: str) -> dict:
+    def _get_with_retry(self, client: requests.Session, url: str) -> dict:
         for attempt in range(MAX_RETRIES):
-            response = client.get(url)
+            response = client.get(url, timeout=10.0)
             if response.status_code == 429:
                 wait = REQUEST_DELAY_SECONDS * (2 ** attempt)
                 print(f"arbeitnow: rate limited, waiting {wait:.0f}s (attempt {attempt + 1}/{MAX_RETRIES})")
