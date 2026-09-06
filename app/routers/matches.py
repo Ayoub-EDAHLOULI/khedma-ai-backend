@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models import Application, Match
 from app.response import ApiResponse
 from app.schemas import PrepareResponse
+from app.services.application_writer import write_application
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -17,9 +18,9 @@ def prepare_application(match_id: UUID, db: Session = Depends(get_db)):
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
 
-    # TODO: replace with app.services.application_writer once the LLM call is wired up.
-    tailored_cv = ""
-    cover_letter = ""
+    result = write_application(match.profile, match.job)
+    tailored_cv = result["tailored_cv"]
+    cover_letter = result["cover_letter"]
 
     application = Application(
         match_id=match.id,

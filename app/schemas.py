@@ -43,6 +43,7 @@ class SearchRequest(BaseModel):
 
 
 class SearchResultItem(BaseModel):
+    match_id: UUID
     job: JobOut
     score: float
     reasoning: str

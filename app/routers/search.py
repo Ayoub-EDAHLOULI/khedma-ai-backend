@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Profile
+from app.models import Match, Profile
 from app.response import ApiResponse
 from app.schemas import JobOut, SearchRequest, SearchResponse, SearchResultItem
 from app.services.language import extract_query
@@ -30,16 +31,31 @@ def search(payload: SearchRequest, db: Session = Depends(get_db)):
 
     matches = find_matches(db, profile, scope=scope)
 
-    result = SearchResponse(
-        detected_language=query["detected_language"],
-        reply=f"Found {len(matches)} matching jobs.",
-        results=[
+    results = []
+    for m in matches:
+        stmt = (
+            insert(Match)
+            .values(job_id=m["job"].id, profile_id=profile.id, score=m["score"], reasoning=m["reasoning"])
+            .on_conflict_do_update(
+                index_elements=["job_id", "profile_id"],
+                set_={"score": m["score"], "reasoning": m["reasoning"]},
+            )
+            .returning(Match.id)
+        )
+        match_id = db.execute(stmt).scalar_one()
+        results.append(
             SearchResultItem(
+                match_id=match_id,
                 job=JobOut.model_validate(m["job"]),
                 score=m["score"],
                 reasoning=m["reasoning"],
             )
-            for m in matches
-        ],
+        )
+    db.commit()
+
+    result = SearchResponse(
+        detected_language=query["detected_language"],
+        reply=f"Found {len(matches)} matching jobs.",
+        results=results,
     )
     return ApiResponse.ok(result, "Search complete")
