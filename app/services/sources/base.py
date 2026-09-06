@@ -23,5 +23,10 @@ class JobSource(ABC):
     name: str
 
     @abstractmethod
-    def fetch(self) -> list[NormalizedJob]:
-        """Fetch postings from this source and return them normalized for the `jobs` table."""
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
+        """Fetch postings from this source and return them normalized for the `jobs` table.
+
+        `queries` is a list of role/skill search terms (e.g. from a profile's skills,
+        or an explicit search request). Sources that don't need a query concept
+        (bulk feeds like Arbeitnow, or listing scrapers like Rekrute/ANAPEC) ignore it.
+        """

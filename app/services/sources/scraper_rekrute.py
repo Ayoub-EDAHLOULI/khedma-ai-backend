@@ -25,7 +25,7 @@ DATE_RANGE_RE = re.compile(r"du\s+(\d{2}/\d{2}/\d{4})")
 class RekruteSource(JobSource):
     name = "rekrute"
 
-    def fetch(self) -> list[NormalizedJob]:
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
         jobs: list[NormalizedJob] = []
 
         with requests.Session() as client:

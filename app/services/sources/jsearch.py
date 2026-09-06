@@ -7,17 +7,15 @@ from app.services.sources.base import JobSource, NormalizedJob
 
 API_URL = "https://jsearch.p.rapidapi.com/search-v2"
 
-# Free tier is capped at 200 requests/month — keep this list short.
-QUERIES = [
-    "software engineer remote",
-    "developer",
-]
+# Free tier is capped at 200 requests/month — used only if no queries are given.
+DEFAULT_QUERIES = ["software engineer remote", "developer"]
 
 
 class JSearchSource(JobSource):
     name = "jsearch"
 
-    def fetch(self) -> list[NormalizedJob]:
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
+        queries = queries or DEFAULT_QUERIES
         jobs: list[NormalizedJob] = []
         headers = {
             "Content-Type": "application/json",
@@ -27,7 +25,7 @@ class JSearchSource(JobSource):
 
         with requests.Session() as client:
             client.headers.update(headers)
-            for query in QUERIES:
+            for query in queries:
                 params = {"query": query, "num_pages": "1", "date_posted": "all"}
                 response = client.get(API_URL, params=params, timeout=20.0)
                 response.raise_for_status()

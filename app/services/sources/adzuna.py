@@ -23,7 +23,7 @@ VISA_KEYWORDS = ("visa sponsorship", "visa sponsor", "sponsorship available")
 class AdzunaSource(JobSource):
     name = "adzuna"
 
-    def fetch(self) -> list[NormalizedJob]:
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
         jobs: list[NormalizedJob] = []
 
         with requests.Session() as client:

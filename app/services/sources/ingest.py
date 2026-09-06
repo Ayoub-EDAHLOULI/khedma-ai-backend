@@ -15,6 +15,7 @@ from app.services.sources.arbeitnow import ArbeitnowSource
 from app.services.sources.base import JobSource, NormalizedJob
 from app.services.sources.jsearch import JSearchSource
 from app.services.sources.scraper_anapec import AnapecSource
+from app.services.sources.scraper_indeed import IndeedSource
 from app.services.sources.scraper_rekrute import RekruteSource
 
 SOURCES: list[JobSource] = [
@@ -23,6 +24,7 @@ SOURCES: list[JobSource] = [
     JSearchSource(),
     RekruteSource(),
     AnapecSource(),
+    IndeedSource(),
 ]
 
 
@@ -105,11 +107,25 @@ def embed_pending_jobs(db, batch_size: int = 100) -> int:
     return len(pending)
 
 
+def get_queries_from_profile(db) -> list[str] | None:
+    """Query-driven sources (JSearch, Indeed) search using the profile's own skills,
+    so ingestion pulls jobs relevant to whoever is actually running this instance —
+    a .NET/React profile pulls .NET/React jobs, an HR profile pulls HR jobs, etc.
+    Falls back to each source's own generic default if no profile/skills exist yet.
+    """
+    profile = db.scalars(select(Profile).limit(1)).first()
+    if profile is None or not profile.skills:
+        return None
+    return profile.skills
+
+
 def run() -> None:
     db = SessionLocal()
     try:
+        queries = get_queries_from_profile(db)
+
         for source in SOURCES:
-            jobs = source.fetch()
+            jobs = source.fetch(queries=queries)
             print(f"{source.name}: fetched {len(jobs)} jobs")
             for job in jobs:
                 upsert_job(db, job)

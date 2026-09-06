@@ -31,7 +31,7 @@ USER_AGENT = (
 class AnapecSource(JobSource):
     name = "anapec"
 
-    def fetch(self) -> list[NormalizedJob]:
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
         jobs: list[NormalizedJob] = []
 
         with requests.Session() as client:

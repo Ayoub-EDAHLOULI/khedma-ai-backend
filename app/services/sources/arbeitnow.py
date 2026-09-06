@@ -13,7 +13,7 @@ MAX_RETRIES = 5
 class ArbeitnowSource(JobSource):
     name = "arbeitnow"
 
-    def fetch(self) -> list[NormalizedJob]:
+    def fetch(self, queries: list[str] | None = None) -> list[NormalizedJob]:
         jobs: list[NormalizedJob] = []
         url = API_URL
 
