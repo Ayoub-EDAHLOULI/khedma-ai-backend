@@ -12,9 +12,16 @@ from app.services.sources.adzuna import AdzunaSource
 from app.services.sources.arbeitnow import ArbeitnowSource
 from app.services.sources.base import JobSource, NormalizedJob
 from app.services.sources.jsearch import JSearchSource
+from app.services.sources.scraper_anapec import AnapecSource
 from app.services.sources.scraper_rekrute import RekruteSource
 
-SOURCES: list[JobSource] = [ArbeitnowSource(), AdzunaSource(), JSearchSource(), RekruteSource()]
+SOURCES: list[JobSource] = [
+    ArbeitnowSource(),
+    AdzunaSource(),
+    JSearchSource(),
+    RekruteSource(),
+    AnapecSource(),
+]
 
 
 def upsert_job(db, job: NormalizedJob) -> None:
