@@ -1,31 +1,14 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 
-from app.response import ApiResponse
+from app.exception_handlers import register_exception_handlers
 from app.routers import jobs, profile
 
 app = FastAPI()
 
+register_exception_handlers(app)
+
 app.include_router(jobs.router)
 app.include_router(profile.router)
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc: RequestValidationError):
-    errors = [f"{'.'.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in exc.errors()]
-    return JSONResponse(
-        status_code=422,
-        content=ApiResponse.fail("Validation failed", errors).model_dump(),
-    )
-
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=ApiResponse.fail(exc.detail).model_dump(),
-    )
 
 
 @app.get("/health")
