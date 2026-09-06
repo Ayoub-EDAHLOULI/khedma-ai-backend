@@ -62,10 +62,14 @@ class Profile(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     full_name = Column(String)
     base_country = Column(String)
-    target_countries = Column(ARRAY(String), default=list)  # explicit international opt-in, e.g. ['FR','DE']
+    target_countries = Column(
+        ARRAY(String), nullable=False, default=list, server_default="{}"
+    )  # explicit international opt-in, e.g. ['FR','DE']
     cv_text = Column(Text)
-    skills = Column(ARRAY(String), default=list)
-    preferred_languages = Column(ARRAY(String), default=list)  # ['darija','fr','ar','en']
+    skills = Column(ARRAY(String), nullable=False, default=list, server_default="{}")
+    preferred_languages = Column(
+        ARRAY(String), nullable=False, default=list, server_default="{}"
+    )  # ['darija','fr','ar','en']
     embedding = Column(Vector(1536), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
 

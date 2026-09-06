@@ -6,6 +6,8 @@ class Settings(BaseSettings):
 
     database_url: str
 
+    cors_origins: str = "http://localhost:3000"
+
     llm_provider: str = "anthropic"
     anthropic_api_key: str = ""
     gemini_api_key: str = ""
