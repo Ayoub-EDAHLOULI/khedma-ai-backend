@@ -1,6 +1,6 @@
 """Pydantic request/response schemas."""
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
@@ -55,3 +55,18 @@ class SearchResponse(BaseModel):
 class PrepareResponse(BaseModel):
     tailored_cv: str
     cover_letter: str
+
+
+class ApplicationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    match_id: UUID
+    tailored_cv: Optional[str] = None
+    cover_letter: Optional[str] = None
+    status: str
+    created_at: datetime
+
+
+class ApplicationStatusUpdate(BaseModel):
+    status: Literal["draft", "applied", "rejected", "interview"]

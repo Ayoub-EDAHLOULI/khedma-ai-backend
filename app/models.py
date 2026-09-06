@@ -17,6 +17,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import relationship
@@ -31,7 +32,7 @@ def utcnow():
 class Job(Base):
     __tablename__ = "jobs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     source = Column(String, nullable=False)  # 'adzuna' | 'arbeitnow' | 'linkedin' | 'indeed' | 'rekrute' | ...
     source_job_id = Column(String, nullable=False)
     title = Column(String, nullable=False)
@@ -58,7 +59,7 @@ class Job(Base):
 class Profile(Base):
     __tablename__ = "profiles"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     full_name = Column(String)
     base_country = Column(String)
     cv_text = Column(Text)
@@ -73,7 +74,7 @@ class Profile(Base):
 class Match(Base):
     __tablename__ = "matches"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     job_id = Column(UUID(as_uuid=True), ForeignKey("jobs.id"))
     profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"))
     score = Column(Numeric)
@@ -90,7 +91,7 @@ class Match(Base):
 class Application(Base):
     __tablename__ = "applications"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     match_id = Column(UUID(as_uuid=True), ForeignKey("matches.id"))
     tailored_cv = Column(Text)
     cover_letter = Column(Text)
