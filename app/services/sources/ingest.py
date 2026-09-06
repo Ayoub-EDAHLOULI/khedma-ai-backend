@@ -8,10 +8,11 @@ from sqlalchemy.dialects.postgresql import insert
 
 from app.database import SessionLocal
 from app.models import Job
+from app.services.sources.adzuna import AdzunaSource
 from app.services.sources.arbeitnow import ArbeitnowSource
 from app.services.sources.base import JobSource, NormalizedJob
 
-SOURCES: list[JobSource] = [ArbeitnowSource()]
+SOURCES: list[JobSource] = [ArbeitnowSource(), AdzunaSource()]
 
 
 def upsert_job(db, job: NormalizedJob) -> None:
