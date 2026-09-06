@@ -4,10 +4,12 @@ run directly, e.g.:
 
     python -m app.services.sources.ingest
 """
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.database import SessionLocal
-from app.models import Job
+from app.models import Job, Profile
+from app.services.embeddings import embed_texts
 from app.services.sources.adzuna import AdzunaSource
 from app.services.sources.arbeitnow import ArbeitnowSource
 from app.services.sources.base import JobSource, NormalizedJob
@@ -55,6 +57,54 @@ def upsert_job(db, job: NormalizedJob) -> None:
     db.execute(stmt)
 
 
+def classify_scope(job: Job, profile: Profile) -> str:
+    """Section 6: local/international/discard classification."""
+    if job.country and profile.base_country and job.country == profile.base_country:
+        return "local"
+
+    if (
+        job.is_remote
+        or job.visa_sponsorship
+        or (job.country and job.country in (profile.target_countries or []))
+    ):
+        return "international"
+
+    return "discard"
+
+
+def classify_pending_jobs(db) -> int:
+    profile = db.scalars(select(Profile).limit(1)).first()
+    if profile is None:
+        print("scope classification skipped: no profile found")
+        return 0
+
+    pending = db.scalars(select(Job).where(Job.scope.is_(None))).all()
+    for job in pending:
+        job.scope = classify_scope(job, profile)
+    db.commit()
+
+    return len(pending)
+
+
+def embed_pending_jobs(db, batch_size: int = 100) -> int:
+    pending = db.scalars(
+        select(Job).where(
+            Job.embedding.is_(None),
+            Job.description.isnot(None),
+            Job.scope != "discard",
+        )
+    ).all()
+
+    for i in range(0, len(pending), batch_size):
+        batch = pending[i : i + batch_size]
+        vectors = embed_texts([job.description for job in batch])
+        for job, vector in zip(batch, vectors):
+            job.embedding = vector
+        db.commit()
+
+    return len(pending)
+
+
 def run() -> None:
     db = SessionLocal()
     try:
@@ -64,6 +114,12 @@ def run() -> None:
             for job in jobs:
                 upsert_job(db, job)
             db.commit()
+
+        classified_count = classify_pending_jobs(db)
+        print(f"classified {classified_count} jobs")
+
+        embedded_count = embed_pending_jobs(db)
+        print(f"embedded {embedded_count} jobs")
     finally:
         db.close()
 

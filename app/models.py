@@ -52,7 +52,7 @@ class Job(Base):
 
     __table_args__ = (
         UniqueConstraint("source", "source_job_id", name="uq_job_source"),
-        CheckConstraint("scope in ('local','international')", name="ck_job_scope"),
+        CheckConstraint("scope in ('local','international','discard')", name="ck_job_scope"),
     )
 
 
@@ -62,6 +62,7 @@ class Profile(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     full_name = Column(String)
     base_country = Column(String)
+    target_countries = Column(ARRAY(String), default=list)  # explicit international opt-in, e.g. ['FR','DE']
     cv_text = Column(Text)
     skills = Column(ARRAY(String), default=list)
     preferred_languages = Column(ARRAY(String), default=list)  # ['darija','fr','ar','en']

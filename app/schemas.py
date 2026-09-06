@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 class ProfileIn(BaseModel):
     full_name: str
     base_country: str
+    target_countries: list[str] = []
     cv_text: str
     skills: list[str] = []
     preferred_languages: list[str] = ["darija", "fr", "ar", "en"]

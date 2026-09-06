@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import Profile
 from app.response import ApiResponse
 from app.schemas import ProfileIn, ProfileOut
+from app.services.embeddings import embed_text
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -20,9 +21,13 @@ def upsert_profile(payload: ProfileIn, db: Session = Depends(get_db)):
 
     profile.full_name = payload.full_name
     profile.base_country = payload.base_country
+    profile.target_countries = payload.target_countries
     profile.cv_text = payload.cv_text
     profile.skills = payload.skills
     profile.preferred_languages = payload.preferred_languages
+
+    embedding_input = payload.cv_text + "\n" + ", ".join(payload.skills)
+    profile.embedding = embed_text(embedding_input)
 
     db.commit()
     db.refresh(profile)
