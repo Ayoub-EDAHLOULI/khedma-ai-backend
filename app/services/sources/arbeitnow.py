@@ -6,7 +6,8 @@ import httpx
 from app.services.sources.base import JobSource, NormalizedJob
 
 API_URL = "https://www.arbeitnow.com/api/job-board-api"
-REQUEST_DELAY_SECONDS = 1.0
+REQUEST_DELAY_SECONDS = 3.0
+MAX_RETRIES = 5
 
 
 class ArbeitnowSource(JobSource):
@@ -18,9 +19,7 @@ class ArbeitnowSource(JobSource):
 
         with httpx.Client(timeout=10.0) as client:
             while url:
-                response = client.get(url)
-                response.raise_for_status()
-                payload = response.json()
+                payload = self._get_with_retry(client, url)
 
                 for entry in payload["data"]:
                     jobs.append(self._normalize(entry))
@@ -30,6 +29,19 @@ class ArbeitnowSource(JobSource):
                     time.sleep(REQUEST_DELAY_SECONDS)
 
         return jobs
+
+    def _get_with_retry(self, client: httpx.Client, url: str) -> dict:
+        for attempt in range(MAX_RETRIES):
+            response = client.get(url)
+            if response.status_code == 429:
+                wait = REQUEST_DELAY_SECONDS * (2 ** attempt)
+                print(f"arbeitnow: rate limited, waiting {wait:.0f}s (attempt {attempt + 1}/{MAX_RETRIES})")
+                time.sleep(wait)
+                continue
+            response.raise_for_status()
+            return response.json()
+
+        raise RuntimeError(f"arbeitnow: giving up on {url} after {MAX_RETRIES} retries")
 
     def _normalize(self, entry: dict) -> NormalizedJob:
         posted_at = None
