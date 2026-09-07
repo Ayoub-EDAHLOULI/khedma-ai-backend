@@ -42,6 +42,7 @@ class Job(Base):
     is_remote = Column(Boolean, default=False)
     visa_sponsorship = Column(Boolean, nullable=True)
     scope = Column(String)  # 'local' | 'international'
+    seniority = Column(String, nullable=True)  # 'junior' | 'mid' | 'senior'
     description = Column(Text)
     raw_json = Column(JSONB)
     posted_at = Column(DateTime(timezone=True), nullable=True)
@@ -53,6 +54,7 @@ class Job(Base):
     __table_args__ = (
         UniqueConstraint("source", "source_job_id", name="uq_job_source"),
         CheckConstraint("scope in ('local','international','discard')", name="ck_job_scope"),
+        CheckConstraint("seniority in ('junior','mid','senior')", name="ck_job_seniority"),
     )
 
 

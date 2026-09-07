@@ -39,6 +39,7 @@ class JobOut(BaseModel):
     city: Optional[str] = None
     is_remote: bool
     scope: Optional[str] = None
+    seniority: Optional[str] = None
     description: Optional[str] = None
 
 
@@ -46,6 +47,9 @@ class SearchRequest(BaseModel):
     message: str
     profile_id: UUID
     scope: Optional[Literal["local", "international"]] = None
+    remote_only: Optional[bool] = None
+    country: Optional[str] = None
+    seniority: Optional[Literal["junior", "mid", "senior"]] = None
 
 
 class SearchResultItem(BaseModel):

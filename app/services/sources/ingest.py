@@ -4,6 +4,8 @@ run directly, e.g.:
 
     python -m app.services.sources.ingest
 """
+import re
+
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
@@ -74,6 +76,28 @@ def classify_scope(job: Job, profile: Profile) -> str:
     return "discard"
 
 
+SENIOR_PATTERN = re.compile(
+    r"\b(senior|sr\.?|lead|principal|staff|head of|director|architect)\b", re.IGNORECASE
+)
+JUNIOR_PATTERN = re.compile(
+    r"\b(junior|jr\.?|intern(ship)?|entry.level|graduate|apprentice)\b", re.IGNORECASE
+)
+
+
+def classify_seniority(job: Job) -> str | None:
+    """Keyword-based seniority tag from the title (most reliable signal), falling
+    back to the description. Same enrichment pattern as classify_scope — best-effort,
+    not exhaustive; jobs that match nothing stay unclassified (None) rather than
+    guessing "mid" by default."""
+    haystacks = [job.title or "", (job.description or "")[:500]]
+    for text_ in haystacks:
+        if SENIOR_PATTERN.search(text_):
+            return "senior"
+        if JUNIOR_PATTERN.search(text_):
+            return "junior"
+    return "mid" if job.title else None
+
+
 def classify_pending_jobs(db) -> int:
     profile = db.scalars(select(Profile).limit(1)).first()
     if profile is None:
@@ -83,6 +107,15 @@ def classify_pending_jobs(db) -> int:
     pending = db.scalars(select(Job).where(Job.scope.is_(None))).all()
     for job in pending:
         job.scope = classify_scope(job, profile)
+    db.commit()
+
+    return len(pending)
+
+
+def classify_pending_seniority(db) -> int:
+    pending = db.scalars(select(Job).where(Job.seniority.is_(None))).all()
+    for job in pending:
+        job.seniority = classify_seniority(job)
     db.commit()
 
     return len(pending)
@@ -133,6 +166,9 @@ def run() -> None:
 
         classified_count = classify_pending_jobs(db)
         print(f"classified {classified_count} jobs")
+
+        seniority_count = classify_pending_seniority(db)
+        print(f"classified seniority for {seniority_count} jobs")
 
         embedded_count = embed_pending_jobs(db)
         print(f"embedded {embedded_count} jobs")

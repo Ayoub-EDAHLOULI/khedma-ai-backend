@@ -29,7 +29,14 @@ def search(payload: SearchRequest, db: Session = Depends(get_db)):
         )
         return ApiResponse.ok(result, "Clarification needed")
 
-    matches = find_matches(db, profile, scope=scope)
+    matches = find_matches(
+        db,
+        profile,
+        scope=scope,
+        remote_only=bool(payload.remote_only),
+        country=payload.country,
+        seniority=payload.seniority,
+    )
 
     results = []
     for m in matches:

@@ -14,16 +14,29 @@ RERANK_MODEL = "gpt-4o-mini"
 _client = OpenAI(api_key=settings.openai_api_key)
 
 
-def shortlist_jobs(db: Session, profile: Profile, scope: str, limit: int = SHORTLIST_SIZE) -> list[Job]:
+def shortlist_jobs(
+    db: Session,
+    profile: Profile,
+    scope: str,
+    limit: int = SHORTLIST_SIZE,
+    remote_only: bool = False,
+    country: str | None = None,
+    seniority: str | None = None,
+) -> list[Job]:
     if profile.embedding is None:
         return []
 
+    conditions = [Job.embedding.isnot(None), Job.scope == scope]
+    if remote_only:
+        conditions.append(Job.is_remote.is_(True))
+    if country:
+        conditions.append(Job.country == country)
+    if seniority:
+        conditions.append(Job.seniority == seniority)
+
     stmt = (
         select(Job)
-        .where(
-            Job.embedding.isnot(None),
-            Job.scope == scope,
-        )
+        .where(*conditions)
         .order_by(Job.embedding.cosine_distance(profile.embedding))
         .limit(limit)
     )
@@ -76,8 +89,22 @@ def rerank_jobs(profile: Profile, jobs: list[Job]) -> list[dict]:
     return json.loads(content)["results"]
 
 
-def find_matches(db: Session, profile: Profile, scope: str) -> list[dict]:
-    shortlist = shortlist_jobs(db, profile, scope)
+def find_matches(
+    db: Session,
+    profile: Profile,
+    scope: str,
+    remote_only: bool = False,
+    country: str | None = None,
+    seniority: str | None = None,
+) -> list[dict]:
+    shortlist = shortlist_jobs(
+        db,
+        profile,
+        scope,
+        remote_only=remote_only,
+        country=country,
+        seniority=seniority,
+    )
     ranked = rerank_jobs(profile, shortlist)
 
     jobs_by_id = {str(job.id): job for job in shortlist}
