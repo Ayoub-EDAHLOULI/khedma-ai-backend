@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Profile
 from app.response import ApiResponse
-from app.schemas import ProfileIn, ProfileOut
+from app.schemas import ParsedResumeResponse, ProfileIn, ProfileOut
 from app.services.embeddings import embed_text
+from app.services.resume_parser import UnsupportedFileTypeError, parse_resume
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -42,3 +43,17 @@ def get_profile(db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No profile found")
 
     return ApiResponse.ok(ProfileOut.model_validate(profile), "Profile retrieved")
+
+
+@router.post("/parse-resume", response_model=ApiResponse[ParsedResumeResponse])
+async def parse_resume_upload(file: UploadFile):
+    content = await file.read()
+
+    try:
+        result = parse_resume(file.filename or "", content)
+    except UnsupportedFileTypeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return ApiResponse.ok(ParsedResumeResponse(**result), "Resume parsed")

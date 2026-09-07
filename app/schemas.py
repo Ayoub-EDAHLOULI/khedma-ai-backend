@@ -22,6 +22,12 @@ class ProfileOut(ProfileIn):
     created_at: datetime
 
 
+class ParsedResumeResponse(BaseModel):
+    full_name: str
+    skills: list[str] = []
+    cv_text: str
+
+
 class JobOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
