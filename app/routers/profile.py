@@ -7,7 +7,11 @@ from app.models import Profile
 from app.response import ApiResponse
 from app.schemas import ParsedResumeResponse, ProfileIn, ProfileOut
 from app.services.embeddings import embed_text
-from app.services.resume_parser import UnsupportedFileTypeError, parse_resume
+from app.services.resume_parser import (
+    NotAResumeError,
+    UnsupportedFileTypeError,
+    parse_resume,
+)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -53,6 +57,8 @@ async def parse_resume_upload(file: UploadFile):
         result = parse_resume(file.filename or "", content)
     except UnsupportedFileTypeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except NotAResumeError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 

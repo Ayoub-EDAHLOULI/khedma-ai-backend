@@ -10,13 +10,21 @@ from app.config import settings
 MODEL = "gpt-4o-mini"
 
 SYSTEM_PROMPT = """You are a resume-parsing assistant. Given the raw text extracted
-from a candidate's resume (PDF or Word), extract structured fields.
+from an uploaded file, first decide whether it is actually a resume/CV (a
+document describing a person's work experience, education, or skills for job
+applications) — not an invoice, article, book excerpt, contract, or other
+unrelated document.
 
-Never invent information that is not present in the text. If a field genuinely
-cannot be determined from the text, use an empty string or empty list for it.
+If it is NOT a resume/CV, respond with:
+{"is_resume": false, "full_name": "", "skills": [], "cv_text": ""}
+
+If it IS a resume/CV, extract structured fields. Never invent information that
+is not present in the text. If a field genuinely cannot be determined from the
+text, use an empty string or empty list for it.
 
 Respond ONLY with a JSON object:
 {
+  "is_resume": true,
   "full_name": "...",
   "skills": ["...", ...],
   "cv_text": "..."
@@ -30,6 +38,10 @@ own content and wording.
 
 
 class UnsupportedFileTypeError(ValueError):
+    pass
+
+
+class NotAResumeError(ValueError):
     pass
 
 
@@ -75,4 +87,11 @@ def parse_resume(filename: str, content: bytes) -> dict:
     if not raw_text.strip():
         raise ValueError("No extractable text found in this file.")
 
-    return structure_resume(raw_text)
+    result = structure_resume(raw_text)
+    if not result.pop("is_resume", True):
+        raise NotAResumeError(
+            "This file doesn't look like a resume/CV. Please upload one that "
+            "includes your work experience, education, or skills."
+        )
+
+    return result
