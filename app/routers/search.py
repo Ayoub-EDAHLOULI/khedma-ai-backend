@@ -29,13 +29,27 @@ def search(payload: SearchRequest, db: Session = Depends(get_db)):
         )
         return ApiResponse.ok(result, "Clarification needed")
 
+    # Explicit chip selections win; otherwise fall back to whatever the LLM
+    # picked up from the message itself (e.g. spoken "junior jobs in the UK").
+    remote_only = payload.remote_only if payload.remote_only is not None else bool(query.get("remote_only"))
+
+    country = payload.country or query.get("country")
+    if not (isinstance(country, str) and len(country) == 2):
+        country = None
+    elif payload.country is None:
+        country = country.upper()
+
+    seniority = payload.seniority or query.get("seniority")
+    if seniority not in ("junior", "mid", "senior"):
+        seniority = None
+
     matches = find_matches(
         db,
         profile,
         scope=scope,
-        remote_only=bool(payload.remote_only),
-        country=payload.country,
-        seniority=payload.seniority,
+        remote_only=remote_only,
+        country=country,
+        seniority=seniority,
     )
 
     results = []

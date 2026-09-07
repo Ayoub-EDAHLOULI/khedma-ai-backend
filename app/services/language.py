@@ -19,7 +19,8 @@ From the user's message, extract a structured search query:
   "skills": [...],
   "location_scope": "local" | "international" | null,
   "remote_only": boolean,
-  "seniority": string | null,
+  "country": "<ISO 3166-1 alpha-2 code>" | null,
+  "seniority": "junior" | "mid" | "senior" | null,
   "clarifying_question": string | null
 }
 
@@ -27,6 +28,14 @@ Set "location_scope" to null if the message does not make clear whether the user
 local (jobs in their own country) or international (remote/visa-sponsored roles abroad)
 results. When it is null, set "clarifying_question" to one short question asking them to
 clarify local vs. international.
+
+Set "country" only when the user names a specific country to search in (e.g. "jobs in
+the UK" -> "GB", "postes en France" -> "FR"). Leave it null otherwise — do not guess a
+country from the candidate's own nationality or base location.
+
+Set "seniority" only when the user's wording implies a level (e.g. "junior", "senior",
+"lead", "entry-level", "intern" -> "junior"; "senior", "lead", "principal" -> "senior").
+Leave it null when no level is implied.
 
 CRITICAL: if "detected_language" is "en", clarifying_question MUST be written in English.
 If "detected_language" is "fr", it MUST be written in French. If "ar", in Arabic. Do not
