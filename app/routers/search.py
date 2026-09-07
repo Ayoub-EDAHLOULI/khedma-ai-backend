@@ -19,6 +19,15 @@ def search(payload: SearchRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Profile not found")
 
     query = extract_query(payload.message)
+
+    if query.get("intent") == "chat":
+        result = SearchResponse(
+            detected_language=query["detected_language"],
+            reply=query.get("chat_reply") or "",
+            results=[],
+        )
+        return ApiResponse.ok(result, "Chat reply")
+
     scope = payload.scope or query["location_scope"]
 
     if scope is None:

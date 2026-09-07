@@ -83,3 +83,9 @@ class ApplicationOut(BaseModel):
 
 class ApplicationStatusUpdate(BaseModel):
     status: Literal["draft", "applied", "rejected", "interview"]
+
+
+class VoiceSessionTokenResponse(BaseModel):
+    token: str
+    model: str
+    expire_time: datetime
