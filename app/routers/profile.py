@@ -1,3 +1,5 @@
+import base64
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -30,6 +32,10 @@ def upsert_profile(payload: ProfileIn, db: Session = Depends(get_db)):
     profile.cv_text = payload.cv_text
     profile.skills = payload.skills
     profile.preferred_languages = payload.preferred_languages
+
+    if payload.resume_docx is not None:
+        profile.resume_docx = base64.b64decode(payload.resume_docx)
+        profile.resume_filename = payload.resume_filename
 
     embedding_input = payload.cv_text + "\n" + ", ".join(payload.skills)
     profile.embedding = embed_text(embedding_input)

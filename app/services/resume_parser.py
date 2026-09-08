@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 
@@ -93,5 +94,9 @@ def parse_resume(filename: str, content: bytes) -> dict:
             "This file doesn't look like a resume/CV. Please upload one that "
             "includes your work experience, education, or skills."
         )
+
+    if filename.lower().endswith(".docx"):
+        result["resume_docx"] = base64.b64encode(content).decode("ascii")
+        result["resume_filename"] = filename
 
     return result

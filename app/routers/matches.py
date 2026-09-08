@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,8 +9,26 @@ from app.models import Application, Match
 from app.response import ApiResponse
 from app.schemas import PrepareResponse
 from app.services.application_writer import write_application
+from app.services.document_writer import (
+    generate_cover_letter_docx,
+    tailor_resume_docx,
+)
 
 router = APIRouter(prefix="/matches", tags=["matches"])
+
+DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+
+def _get_application_or_404(match_id: UUID, db: Session) -> Application:
+    application = db.scalars(
+        select(Application).where(Application.match_id == match_id)
+    ).first()
+    if application is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No prepared application for this match yet — call prepare first.",
+        )
+    return application
 
 
 @router.post("/{match_id}/prepare", response_model=ApiResponse[PrepareResponse])
@@ -54,4 +72,38 @@ def prepare_application(match_id: UUID, db: Session = Depends(get_db)):
             cover_letter=cover_letter,
         ),
         "Application package prepared",
+    )
+
+
+@router.get("/{match_id}/resume.docx")
+def download_resume(match_id: UUID, db: Session = Depends(get_db)):
+    match = db.get(Match, match_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    application = _get_application_or_404(match_id, db)
+    content = tailor_resume_docx(match.profile, application.tailored_cv, match.job)
+
+    return Response(
+        content=content,
+        media_type=DOCX_MEDIA_TYPE,
+        headers={"Content-Disposition": 'attachment; filename="resume.docx"'},
+    )
+
+
+@router.get("/{match_id}/cover-letter.docx")
+def download_cover_letter(match_id: UUID, db: Session = Depends(get_db)):
+    match = db.get(Match, match_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    application = _get_application_or_404(match_id, db)
+    content = generate_cover_letter_docx(
+        application.cover_letter, match.profile, match.job
+    )
+
+    return Response(
+        content=content,
+        media_type=DOCX_MEDIA_TYPE,
+        headers={"Content-Disposition": 'attachment; filename="cover-letter.docx"'},
     )

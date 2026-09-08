@@ -13,6 +13,7 @@ from sqlalchemy import (
     Column,
     DateTime,
     ForeignKey,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -69,6 +70,8 @@ class Profile(Base):
         ARRAY(String), nullable=False, default=list, server_default="{}"
     )  # explicit international opt-in, e.g. ['FR','DE']
     cv_text = Column(Text)
+    resume_docx = Column(LargeBinary, nullable=True)
+    resume_filename = Column(String, nullable=True)
     skills = Column(ARRAY(String), nullable=False, default=list, server_default="{}")
     preferred_languages = Column(
         ARRAY(String), nullable=False, default=list, server_default="{}"

@@ -13,6 +13,8 @@ class ProfileIn(BaseModel):
     cv_text: str
     skills: list[str] = []
     preferred_languages: list[str] = ["darija", "fr", "ar", "en"]
+    resume_docx: Optional[str] = None  # base64; omit to leave any stored file unchanged
+    resume_filename: Optional[str] = None
 
 
 class ProfileOut(ProfileIn):
@@ -26,6 +28,8 @@ class ParsedResumeResponse(BaseModel):
     full_name: str
     skills: list[str] = []
     cv_text: str
+    resume_docx: Optional[str] = None  # base64, only when the upload was a .docx
+    resume_filename: Optional[str] = None
 
 
 class JobOut(BaseModel):
