@@ -68,6 +68,8 @@ class SearchResponse(BaseModel):
 
 
 class PrepareResponse(BaseModel):
+    id: UUID
+    status: str
     tailored_cv: str
     cover_letter: str
 
@@ -77,10 +79,25 @@ class ApplicationOut(BaseModel):
 
     id: UUID
     match_id: UUID
+    job: JobOut
+    score: float
     tailored_cv: Optional[str] = None
     cover_letter: Optional[str] = None
     status: str
     created_at: datetime
+
+    @classmethod
+    def from_application(cls, application):
+        return cls(
+            id=application.id,
+            match_id=application.match_id,
+            job=JobOut.model_validate(application.match.job),
+            score=application.match.score,
+            tailored_cv=application.tailored_cv,
+            cover_letter=application.cover_letter,
+            status=application.status,
+            created_at=application.created_at,
+        )
 
 
 class ApplicationStatusUpdate(BaseModel):

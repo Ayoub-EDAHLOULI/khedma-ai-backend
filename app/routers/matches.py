@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -18,6 +19,20 @@ def prepare_application(match_id: UUID, db: Session = Depends(get_db)):
     if match is None:
         raise HTTPException(status_code=404, detail="Match not found")
 
+    existing = db.scalars(
+        select(Application).where(Application.match_id == match_id)
+    ).first()
+    if existing is not None:
+        return ApiResponse.ok(
+            PrepareResponse(
+                id=existing.id,
+                status=existing.status,
+                tailored_cv=existing.tailored_cv,
+                cover_letter=existing.cover_letter,
+            ),
+            "Application package already prepared",
+        )
+
     result = write_application(match.profile, match.job)
     tailored_cv = result["tailored_cv"]
     cover_letter = result["cover_letter"]
@@ -29,8 +44,14 @@ def prepare_application(match_id: UUID, db: Session = Depends(get_db)):
     )
     db.add(application)
     db.commit()
+    db.refresh(application)
 
     return ApiResponse.ok(
-        PrepareResponse(tailored_cv=tailored_cv, cover_letter=cover_letter),
+        PrepareResponse(
+            id=application.id,
+            status=application.status,
+            tailored_cv=tailored_cv,
+            cover_letter=cover_letter,
+        ),
         "Application package prepared",
     )

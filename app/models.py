@@ -107,3 +107,5 @@ class Application(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
     match = relationship("Match", back_populates="application")
+
+    __table_args__ = (UniqueConstraint("match_id", name="uq_application_match"),)
