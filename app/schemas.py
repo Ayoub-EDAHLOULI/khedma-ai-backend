@@ -41,6 +41,7 @@ class JobOut(BaseModel):
     scope: Optional[str] = None
     seniority: Optional[str] = None
     description: Optional[str] = None
+    url: Optional[str] = None
 
 
 class SearchRequest(BaseModel):

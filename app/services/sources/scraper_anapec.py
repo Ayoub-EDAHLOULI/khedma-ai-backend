@@ -69,7 +69,9 @@ class AnapecSource(JobSource):
             return None
 
         reference = ref_link.get_text(strip=True)
-        offer_id = ref_link.get("href", "").rstrip("/").split("/")[-2] if "bloc_offre_home" in ref_link.get("href", "") else reference
+        href = ref_link.get("href", "")
+        offer_id = href.rstrip("/").split("/")[-2] if "bloc_offre_home" in href else reference
+        detail_url = BASE_URL + href if href.startswith("/") else (href or None)
 
         date_text = cells[2].get_text(strip=True)
         posted_at = None
@@ -93,6 +95,7 @@ class AnapecSource(JobSource):
             city=city,
             is_remote=False,
             description=None,
+            url=detail_url,
             posted_at=posted_at,
             raw_json={"reference": reference},
         )

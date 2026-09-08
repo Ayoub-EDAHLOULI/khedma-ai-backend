@@ -56,6 +56,7 @@ class ArbeitnowSource(JobSource):
             city=entry.get("location"),
             is_remote=bool(entry.get("remote", False)),
             description=entry.get("description"),
+            url=entry.get("url"),
             posted_at=posted_at,
             raw_json=entry,
         )

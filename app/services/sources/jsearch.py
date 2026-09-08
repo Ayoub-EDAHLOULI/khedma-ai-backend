@@ -52,6 +52,7 @@ class JSearchSource(JobSource):
             city=entry.get("job_city"),
             is_remote=bool(entry.get("job_is_remote", False)),
             description=entry.get("job_description"),
+            url=entry.get("job_apply_link"),
             posted_at=posted_at,
             raw_json=entry,
         )

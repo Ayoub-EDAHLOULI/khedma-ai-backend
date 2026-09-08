@@ -78,6 +78,7 @@ class AdzunaSource(JobSource):
             is_remote=any(kw in text for kw in REMOTE_KEYWORDS),
             visa_sponsorship=any(kw in text for kw in VISA_KEYWORDS) or None,
             description=description,
+            url=entry.get("redirect_url"),
             posted_at=posted_at,
             raw_json=entry,
         )

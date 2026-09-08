@@ -41,6 +41,7 @@ def upsert_job(db, job: NormalizedJob) -> None:
         is_remote=job.is_remote,
         visa_sponsorship=job.visa_sponsorship,
         description=job.description,
+        url=job.url,
         posted_at=job.posted_at,
         raw_json=job.raw_json,
     )
@@ -54,6 +55,7 @@ def upsert_job(db, job: NormalizedJob) -> None:
             "is_remote": stmt.excluded.is_remote,
             "visa_sponsorship": stmt.excluded.visa_sponsorship,
             "description": stmt.excluded.description,
+            "url": stmt.excluded.url,
             "posted_at": stmt.excluded.posted_at,
             "raw_json": stmt.excluded.raw_json,
         },

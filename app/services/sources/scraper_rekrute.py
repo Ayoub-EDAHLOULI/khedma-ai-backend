@@ -87,6 +87,7 @@ class RekruteSource(JobSource):
             city=city,
             is_remote=False,
             description=description,
+            url=detail_url,
             posted_at=posted_at,
             raw_json={"detail_url": detail_url},
         )

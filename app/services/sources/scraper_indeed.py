@@ -80,15 +80,17 @@ class IndeedSource(JobSource):
             posted_at = datetime.fromtimestamp(entry["createDate"] / 1000, tz=timezone.utc)
 
         city = entry.get("jobLocationCity") or entry.get("formattedLocation")
+        job_key = entry["jobkey"]
 
         return NormalizedJob(
             source=self.name,
-            source_job_id=entry["jobkey"],
+            source_job_id=job_key,
             title=entry.get("displayTitle") or entry.get("title", ""),
             company=entry.get("company"),
             city=city,
             is_remote=bool(entry.get("remoteLocation", False)),
             description=description,
+            url=f"https://www.indeed.com/viewjob?jk={job_key}",
             posted_at=posted_at,
             raw_json=entry,
         )

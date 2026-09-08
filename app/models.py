@@ -44,6 +44,7 @@ class Job(Base):
     scope = Column(String)  # 'local' | 'international'
     seniority = Column(String, nullable=True)  # 'junior' | 'mid' | 'senior'
     description = Column(Text)
+    url = Column(String, nullable=True)
     raw_json = Column(JSONB)
     posted_at = Column(DateTime(timezone=True), nullable=True)
     fetched_at = Column(DateTime(timezone=True), default=utcnow)

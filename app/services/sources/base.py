@@ -15,6 +15,7 @@ class NormalizedJob:
     is_remote: bool = False
     visa_sponsorship: Optional[bool] = None
     description: Optional[str] = None
+    url: Optional[str] = None
     posted_at: Optional[datetime] = None
     raw_json: dict[str, Any] = field(default_factory=dict)
 
