@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Literal, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ProfileIn(BaseModel):
@@ -51,6 +51,7 @@ class SearchRequest(BaseModel):
     remote_only: Optional[bool] = None
     country: Optional[str] = None
     seniority: Optional[Literal["junior", "mid", "senior"]] = None
+    limit: Optional[int] = Field(default=None, ge=1, le=30)
 
 
 class SearchResultItem(BaseModel):

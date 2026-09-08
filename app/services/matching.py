@@ -96,6 +96,7 @@ def find_matches(
     remote_only: bool = False,
     country: str | None = None,
     seniority: str | None = None,
+    limit: int | None = None,
 ) -> list[dict]:
     shortlist = shortlist_jobs(
         db,
@@ -116,4 +117,4 @@ def find_matches(
         results.append({"job": job, "score": entry["score"], "reasoning": entry["reasoning"]})
 
     results.sort(key=lambda r: r["score"], reverse=True)
-    return results[:TOP_RESULTS]
+    return results[: limit or TOP_RESULTS]

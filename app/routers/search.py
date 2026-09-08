@@ -59,6 +59,7 @@ def search(payload: SearchRequest, db: Session = Depends(get_db)):
         remote_only=remote_only,
         country=country,
         seniority=seniority,
+        limit=payload.limit,
     )
 
     results = []
