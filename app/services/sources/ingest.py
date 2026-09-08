@@ -160,7 +160,11 @@ def run() -> None:
         queries = get_queries_from_profile(db)
 
         for source in SOURCES:
-            jobs = source.fetch(queries=queries)
+            try:
+                jobs = source.fetch(queries=queries)
+            except Exception as exc:
+                print(f"{source.name}: failed ({exc!r}), skipping")
+                continue
             print(f"{source.name}: fetched {len(jobs)} jobs")
             for job in jobs:
                 upsert_job(db, job)
